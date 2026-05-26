@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Velvet Notes · Animated</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* theme variables (light default) */
+    :root {
+      --bg-gradient-start: rgba(248, 250, 252, 1);
+      --bg-gradient-end: rgba(238, 242, 248, 1);
+      --card-bg: rgba(255, 255, 255, 0.96);
+      --card-border: rgba(255,255,255,0.5);
+      --text-primary: #0a2a3b;
+      --text-secondary: #2c4f6e;
+      --text-muted: #8ba0b5;
+      --border-light: #edf2f9;
+      --accent: #1f4a6e;
+      --accent-hover: #0e3a58;
+      --pin-color: #f59e0b;
+      --delete-bg: #fff0f0;
+      --delete-color: #bc1c2e;
+      --input-bg: #fefefb;
+      --input-border: #e4eaf2;
+      --shadow-sm: 0 12px 28px -12px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 24px 36px -16px rgba(0, 32, 64, 0.18);
+      --modal-bg: rgba(0,0,0,0.5);
+    }
+
+    body.dark {
+      --bg-gradient-start: #121826;
+      --bg-gradient-end: #0f131f;
+      --card-bg: #1e2436;
+      --card-border: rgba(255,255,255,0.05);
+      --text-primary: #f0f3fa;
+      --text-secondary: #b9c8e6;
+      --text-muted: #8f9bb3;
+      --border-light: #2d3548;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --pin-color: #fbbf24;
+      --delete-bg: #2d1f22;
+      --delete-color: #f87171;
+      --input-bg: #111827;
+      --input-border: #2d3748;
+      --shadow-sm: 0 12px 28px -12px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 24px 36px -16px rgba(0, 0, 0, 0.5);
+      --modal-bg: rgba(0,0,0,0.7);
+    }
+
+    body {
+      background: radial-gradient(circle at 10% 20%, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      font-family: 'Inter', system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', 'Roboto', Helvetica, sans-serif;
+      min-height: 100vh;
+      letter-spacing: -0.01em;
+      transition: background 0.2s, color 0.2s;
+      color: var(--text-primary);
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap');
+
+    /* ----- ANIMATIONS ----- */
+    @keyframes fadeSlideUp {
+      0% { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeScale {
+      0% { opacity: 0; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.94); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); background-color: rgba(59,130,246,0.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shakePin {
+      0%,100% { transform: rotate(0deg); }
+      25% { transform: rotate(8deg); }
+      75% { transform: rotate(-8deg); }
+    }
+    .animate-card-in {
+      animation: fadeSlideUp 0.2s ease-out forwards;
+    }
+    .animate-card-out {
+      animation: fadeOut 0.15s ease-in forwards;
+      pointer-events: none;
+    }
+    .animate-pulse {
+      animation: pulse 0.2s ease-out;
+    }
+    .animate-pin {
+      animation: shakePin 0.2s ease;
+    }
+    .animate-modal-in {
+      animation: fadeScale 0.2s ease-out;
+    }
+    /* for full window transitions */
+    .fade-transition {
+      transition: opacity 0.15s ease;
+    }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 2rem 2rem 1.5rem;
+      position: relative;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(145deg, var(--accent), #2c5f8a);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1::before {
+      content: "✨";
+      font-size: 2rem;
+      background: none;
+      color: var(--accent);
+    }
+
+    .stats {
+      background: rgba(128, 128, 128, 0.1);
+      backdrop-filter: blur(8px);
+      padding: 0.45rem 1.3rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+      background: var(--card-bg);
+      padding: 0.8rem 1.2rem;
+      border-radius: 2rem;
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--card-border);
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--input-bg);
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      border: 1px solid var(--input-border);
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    .sort-select {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .settings-btn {
+      background: var(--accent);
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.2s;
+    }
+
+    .settings-btn:hover {
+      background: var(--accent-hover);
+      transform: scale(0.98);
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 1.8rem;
+      margin: 1.8rem 0 2rem;
+    }
+
+    .note-card {
+      background: var(--card-bg);
+      border-radius: 2rem;
+      padding: 1.4rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+      position: relative;
+    }
+
+    .note-card.pinned {
+      border-left: 6px solid var(--pin-color);
+    }
+
+    .note-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .note-title-preview {
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--text-primary);
+      margin-bottom: 0.6rem;
+      word-break: break-word;
+      padding-right: 2rem;
+    }
+
+    .pin-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.2rem;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--pin-color);
+      transition: 0.1s;
+    }
+
+    .note-snippet {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin: 0.7rem 0 1rem;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-light);
+      padding-top: 0.8rem;
+    }
+
+    .delete-card-icon, .duplicate-card-icon {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 5px 8px;
+      border-radius: 40px;
+      transition: all 0.15s;
+      color: var(--text-muted);
+    }
+
+    .delete-card-icon:hover {
+      background: var(--delete-bg);
+      color: var(--delete-color);
+    }
+
+    .duplicate-card-icon:hover {
+      background: rgba(59,130,246,0.1);
+      color: var(--accent);
+    }
+
+    .empty-grid {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--card-bg);
+      border-radius: 3rem;
+      color: var(--text-muted);
+      border: 1px dashed var(--input-border);
+      grid-column: 1 / -1;
+    }
+
+    .full-window {
+      background: var(--card-bg);
+      border-radius: 2.5rem;
+      padding: 2rem;
+      margin-top: 0.5rem;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--card-border);
+    }
+
+    .window-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .back-btn {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      padding: 0.55rem 1.4rem;
+      border-radius: 60px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .delete-window-btn, .duplicate-window-btn {
+      background: var(--delete-bg);
+      border: none;
+      padding: 0.55rem 1.3rem;
+      border-radius: 60px;
+      font-weight: 600;
+      color: var(--delete-color);
+      cursor: pointer;
+    }
+
+    .duplicate-window-btn {
+      background: rgba(59,130,246,0.1);
+      color: var(--accent);
+    }
+
+    .edit-window-btn, .save-window-btn {
+      background: var(--accent);
+      border: none;
+      padding: 0.55rem 1.6rem;
+      border-radius: 60px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-title, .editor-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .view-title {
+      border-bottom: 2px solid var(--border-light);
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .view-content {
+      font-size: 1rem;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      background: var(--input-bg);
+      padding: 1.2rem;
+      border-radius: 1.5rem;
+      min-height: 320px;
+      border: 1px solid var(--input-border);
+    }
+
+    .editor-title {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid var(--border-light);
+      margin-bottom: 1.4rem;
+      outline: none;
+      background: transparent;
+    }
+    .editor-title:focus { border-bottom-color: var(--accent); }
+
+    .editor-content {
+      width: 100%;
+      font-size: 1rem;
+      line-height: 1.65;
+      padding: 1rem;
+      border: 1px solid var(--input-border);
+      border-radius: 1.5rem;
+      outline: none;
+      resize: vertical;
+      min-height: 320px;
+      background: var(--input-bg);
+      color: var(--text-primary);
+    }
+
+    .editor-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.8rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .small-note {
+      margin-top: 1rem;
+      text-align: right;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    .hidden { display: none; }
+
+    .floating-add {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      width: 64px;
+      height: 64px;
+      border-radius: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 28px -8px rgba(0, 32, 64, 0.3);
+      cursor: pointer;
+      border: none;
+      z-index: 30;
+      color: white;
+      font-size: 2rem;
+      transition: all 0.25s ease;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--modal-bg);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.2s;
+    }
+    .modal-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .settings-modal {
+      background: var(--card-bg);
+      border-radius: 2rem;
+      padding: 1.8rem;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--card-border);
+    }
+    .settings-modal h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.2rem;
+      color: var(--text-primary);
+    }
+    .settings-modal .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .setting-item button {
+      background: var(--accent);
+      border: none;
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      color: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .setting-item button.danger {
+      background: var(--delete-bg);
+      color: var(--delete-color);
+    }
+    .close-settings {
+      width: 100%;
+      margin-top: 1rem;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      padding: 0.6rem;
+      border-radius: 2rem;
+      cursor: pointer;
+    }
+
+    @media (max-width: 640px) {
+      .app { padding: 1.2rem; }
+      .view-title, .editor-title { font-size: 1.5rem; }
+      .floating-add { width: 54px; height: 54px; font-size: 1.8rem; }
+      .full-window { padding: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header-bar">
+    <h1>velvet notes</h1>
+    <div class="stats" id="notesCount">0 notes</div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">🔍 <input type="text" id="searchInput" placeholder="Search notes..."></div>
+    <select id="sortSelect" class="sort-select">
+      <option value="newest">📅 Newest first</option>
+      <option value="oldest">📅 Oldest first</option>
+      <option value="az">🔤 A → Z</option>
+      <option value="za">🔤 Z → A</option>
+    </select>
+    <button id="settingsCogBtn" class="settings-btn" title="Settings">⚙️</button>
+  </div>
+
+  <div id="listViewContainer">
+    <div id="notesGrid" class="notes-grid"></div>
+  </div>
+
+  <div id="fullWindow" class="full-window hidden">
+    <div class="window-header">
+      <button class="back-btn" id="backToListBtn">← Back to notes</button>
+      <div class="action-buttons" id="windowActionButtons"></div>
+    </div>
+    <div id="viewModeContainer">
+      <div class="view-title" id="viewTitle"></div>
+      <div class="view-content" id="viewContent"></div>
+      <div class="small-note">✨ Click "Edit" to make changes</div>
+    </div>
+    <div id="editModeContainer" class="hidden">
+      <input type="text" id="editorTitle" class="editor-title" placeholder="Note title (optional)">
+      <textarea id="editorBody" class="editor-content" placeholder="Write your note here..."></textarea>
+      <div class="editor-info"><span id="wordCount">0 words</span><span id="charCount">0 characters</span></div>
+      <div class="small-note">✏️ Make changes then click Save</div>
+    </div>
+  </div>
+  <footer>⚡ Click any note → view mode → Edit · 🔖 Pin notes · ⚙️ Settings panel · Every action animated ✨</footer>
+</div>
+<button class="floating-add" id="floatingAddBtn">+</button>
+
+<div id="settingsModal" class="modal-overlay">
+  <div class="settings-modal">
+    <h3>⚙️ Settings & Tools</h3>
+    <div class="setting-item">
+      <span>🌓 Dark mode</span>
+      <button id="modalThemeBtn">Toggle</button>
+    </div>
+    <div class="setting-item">
+      <span>🗑️ Delete all notes</span>
+      <button id="modalClearAllBtn" class="danger">Clear all</button>
+    </div>
+    <div class="setting-item">
+      <span>ℹ️ About</span>
+      <span style="font-size:0.75rem;">Velvet Notes · animated ✨</span>
+    </div>
+    <button id="closeSettingsBtn" class="close-settings">Close</button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- DATA ----------
+    let notesArray = [];
+    let currentNoteId = null;
+    let isEditMode = false;
+    let currentSort = "newest";
+    let searchQuery = "";
+
+    // DOM elements
+    const notesGridContainer = document.getElementById('notesGrid');
+    const listViewDiv = document.getElementById('listViewContainer');
+    const fullWindowDiv = document.getElementById('fullWindow');
+    const backToListBtn = document.getElementById('backToListBtn');
+    const floatingAddBtn = document.getElementById('floatingAddBtn');
+    const notesCountSpan = document.getElementById('notesCount');
+    const viewModeContainer = document.getElementById('viewModeContainer');
+    const viewTitleSpan = document.getElementById('viewTitle');
+    const viewContentDiv = document.getElementById('viewContent');
+    const editModeContainer = document.getElementById('editModeContainer');
+    const editorTitle = document.getElementById('editorTitle');
+    const editorBody = document.getElementById('editorBody');
+    const actionButtonsDiv = document.getElementById('windowActionButtons');
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const settingsCog = document.getElementById('settingsCogBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const modalThemeBtn = document.getElementById('modalThemeBtn');
+    const modalClearAllBtn = document.getElementById('modalClearAllBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const wordCountSpan = document.getElementById('wordCount');
+    const charCountSpan = document.getElementById('charCount');
+
+    const STORAGE_KEY = 'velvet_notes_power_v4';
+
+    // ---- helper: trigger animation on element ----
+    function animateElement(el, animationClass, duration = 200) {
+      if (!el) return;
+      el.classList.add(animationClass);
+      setTimeout(() => el.classList.remove(animationClass), duration);
+    }
+
+    function animateCard(cardElement, isDelete = false) {
+      if (!cardElement) return;
+      if (isDelete) {
+        cardElement.classList.add('animate-card-out');
+        setTimeout(() => {
+          if (cardElement.parentNode) cardElement.remove();
+        }, 150);
+      } else {
+        animateElement(cardElement, 'animate-card-in', 200);
+      }
+    }
+
+    // persist
+    function persistNotes() { localStorage.setItem(STORAGE_KEY, JSON.stringify(notesArray)); }
+
+    function loadInitialNotes() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            notesArray = parsed.map(n => ({ ...n, pinned: n.pinned || false, updatedAt: n.updatedAt || Date.now() }));
+            return;
+          }
+        } catch(e) {}
+      }
+      notesArray = [
+        { id: Date.now() + 101, title: "🌟 Welcome to Velvet Notes", content: "Pin important notes using the 📌 icon. Open settings (⚙️) for dark mode & clear all. Enjoy!", updatedAt: Date.now() - 3600000, pinned: true },
+        { id: Date.now() + 102, title: "Smart features", content: "🔖 Pin to top\n🔍 Search\n📋 Duplicate\n✏️ Edit in full window\n⚙️ Settings modal contains dark mode & clear all.", updatedAt: Date.now() - 1800000, pinned: false }
+      ];
+      persistNotes();
+    }
+
+    function getFilteredAndSortedNotes() {
+      let filtered = notesArray.filter(n => {
+        if (!searchQuery.trim()) return true;
+        const haystack = (n.title + " " + n.content).toLowerCase();
+        return haystack.includes(searchQuery.toLowerCase());
+      });
+      filtered.sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+      if (currentSort === "newest") filtered.sort((a,b) => (a.pinned === b.pinned ? b.updatedAt - a.updatedAt : (b.pinned ? 1 : -1)));
+      else if (currentSort === "oldest") filtered.sort((a,b) => (a.pinned === b.pinned ? a.updatedAt - b.updatedAt : (b.pinned ? 1 : -1)));
+      else if (currentSort === "az") filtered.sort((a,b) => (a.pinned === b.pinned ? (a.title || "").localeCompare(b.title || "") : (b.pinned ? 1 : -1)));
+      else if (currentSort === "za") filtered.sort((a,b) => (a.pinned === b.pinned ? (b.title || "").localeCompare(a.title || "") : (b.pinned ? 1 : -1)));
+      return filtered;
+    }
+
+    function renderNotesList() {
+      const filtered = getFilteredAndSortedNotes();
+      notesCountSpan.innerText = `${filtered.length} ${filtered.length === 1 ? 'note' : 'notes'}`;
+      if (filtered.length === 0) {
+        notesGridContainer.innerHTML = `<div class="empty-grid">📭 No notes — tap + to write</div>`;
+        return;
+      }
+      const fragment = document.createDocumentFragment();
+      for (const note of filtered) {
+        const card = document.createElement('div');
+        card.className = `note-card ${note.pinned ? 'pinned' : ''}`;
+        card.setAttribute('data-id', note.id);
+        const pinBtn = document.createElement('button');
+        pinBtn.innerHTML = note.pinned ? '📌' : '📍';
+        pinBtn.className = 'pin-badge';
+        pinBtn.title = note.pinned ? 'Unpin' : 'Pin';
+        pinBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePin(note.id);
+          animateElement(pinBtn, 'animate-pin', 200);
+        });
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'note-title-preview';
+        titleDiv.textContent = (note.title?.trim()) ? note.title : "📄 Untitled";
+        const snippetDiv = document.createElement('div');
+        snippetDiv.className = 'note-snippet';
+        let raw = note.content?.trim() || "";
+        snippetDiv.textContent = raw.length > 110 ? raw.slice(0,107)+"..." : (raw || "(empty)");
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'card-meta';
+        const date = new Date(note.updatedAt).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+        const timeSpan = document.createElement('span');
+        timeSpan.textContent = `🕒 ${date}`;
+        const btnGroup = document.createElement('div');
+        const dupIcon = document.createElement('button');
+        dupIcon.innerHTML = '📋';
+        dupIcon.className = 'duplicate-card-icon';
+        dupIcon.title = 'Duplicate';
+        dupIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          duplicateNoteById(note.id);
+          animateElement(dupIcon, 'animate-pulse', 150);
+        });
+        const delIcon = document.createElement('button');
+        delIcon.innerHTML = '🗑️';
+        delIcon.className = 'delete-card-icon';
+        delIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm('Delete note?')) {
+            animateCard(card, true);
+            setTimeout(() => deleteNoteById(note.id), 150);
+          }
+        });
+        btnGroup.appendChild(dupIcon);
+        btnGroup.appendChild(delIcon);
+        metaDiv.appendChild(timeSpan);
+        metaDiv.appendChild(btnGroup);
+        card.appendChild(pinBtn);
+        card.appendChild(titleDiv);
+        card.appendChild(snippetDiv);
+        card.appendChild(metaDiv);
+        card.addEventListener('click', (e) => {
+          if (e.target === pinBtn || pinBtn.contains(e.target)) return;
+          if (e.target === delIcon || delIcon.contains(e.target) || e.target === dupIcon || dupIcon.contains(e.target)) return;
+          openFullWindowForNote(note.id);
+          animateElement(card, 'animate-pulse', 150);
+        });
+        fragment.appendChild(card);
+      }
+      notesGridContainer.innerHTML = '';
+      notesGridContainer.appendChild(fragment);
+      // add entry animation to all new cards
+      document.querySelectorAll('.note-card').forEach(card => animateElement(card, 'animate-card-in', 200));
+    }
+
+    function togglePin(id) {
+      const note = notesArray.find(n => n.id === id);
+      if (note) { note.pinned = !note.pinned; persistNotes(); renderNotesList(); }
+    }
+
+    function duplicateNoteById(id) {
+      const original = notesArray.find(n => n.id === id);
+      if (!original) return;
+      const newNote = {
+        id: Date.now() + Math.random() * 10000,
+        title: original.title ? original.title + " (copy)" : "",
+        content: original.content,
+        updatedAt: Date.now(),
+        pinned: false
+      };
+      notesArray.push(newNote);
+      persistNotes();
+      renderNotesList();
+      // flash count
+      animateElement(notesCountSpan, 'animate-pulse', 200);
+    }
+
+    function deleteNoteById(id) {
+      notesArray = notesArray.filter(n => n.id !== id);
+      persistNotes();
+      if (currentNoteId === id) closeFullWindowAndShowList();
+      renderNotesList();
+      animateElement(notesCountSpan, 'animate-pulse', 200);
+    }
+
+    function clearAllNotes() {
+      if (notesArray.length === 0) return;
+      if (confirm("⚠️ Delete ALL notes permanently? This action cannot be undone.")) {
+        notesArray = [];
+        persistNotes();
+        if (currentNoteId !== null) closeFullWindowAndShowList();
+        renderNotesList();
+        closeSettingsModal();
+        animateElement(notesCountSpan, 'animate-pulse', 200);
+      }
+    }
+
+    // full window animations on open/close
+    function openFullWindowForNote(noteId) {
+      const note = notesArray.find(n => n.id === noteId);
+      if (!note) return;
+      currentNoteId = note.id;
+      isEditMode = false;
+      viewTitleSpan.textContent = (note.title?.trim()) ? note.title : "📄 Untitled";
+      viewContentDiv.textContent = note.content || "(empty note)";
+      editorTitle.value = note.title || "";
+      editorBody.value = note.content || "";
+      updateWordCharCount();
+      viewModeContainer.classList.remove('hidden');
+      editModeContainer.classList.add('hidden');
+      updateActionButtonsForView();
+      listViewDiv.classList.add('hidden');
+      fullWindowDiv.classList.remove('hidden');
+      animateElement(fullWindowDiv, 'animate-card-in', 200);
+    }
+
+    function openNewNoteEditor() {
+      currentNoteId = null;
+      isEditMode = true;
+      editorTitle.value = "";
+      editorBody.value = "";
+      updateWordCharCount();
+      viewModeContainer.classList.add('hidden');
+      editModeContainer.classList.remove('hidden');
+      updateActionButtonsForEdit(true);
+      listViewDiv.classList.add('hidden');
+      fullWindowDiv.classList.remove('hidden');
+      animateElement(fullWindowDiv, 'animate-card-in', 200);
+      editorBody.focus();
+    }
+
+    function switchToEditMode() {
+      if (!currentNoteId) return;
+      const note = notesArray.find(n => n.id === currentNoteId);
+      if (!note) return;
+      isEditMode = true;
+      editorTitle.value = note.title || "";
+      editorBody.value = note.content || "";
+      updateWordCharCount();
+      viewModeContainer.classList.add('hidden');
+      editModeContainer.classList.remove('hidden');
+      updateActionButtonsForEdit(false);
+      editorBody.focus();
+      animateElement(editModeContainer, 'animate-card-in', 150);
+    }
+
+    function saveFromEditMode() {
+      const newTitle = editorTitle.value.trim();
+      const newContent = editorBody.value.trim();
+      if (newContent === "") { alert("Content cannot be empty"); return; }
+      if (currentNoteId === null) {
+        const newNote = { id: Date.now() + Math.random()*10000, title: newTitle, content: newContent, updatedAt: Date.now(), pinned: false };
+        notesArray.push(newNote);
+        persistNotes();
+        renderNotesList();
+        closeFullWindowAndShowList();
+        animateElement(floatingAddBtn, 'animate-pulse', 200);
+      } else {
+        const idx = notesArray.findIndex(n => n.id === currentNoteId);
+        if (idx !== -1) {
+          notesArray[idx].title = newTitle;
+          notesArray[idx].content = newContent;
+          notesArray[idx].updatedAt = Date.now();
+          persistNotes();
+          renderNotesList();
+          closeFullWindowAndShowList();
+          animateElement(notesCountSpan, 'animate-pulse', 200);
+        } else { closeFullWindowAndShowList(); renderNotesList(); }
+      }
+    }
+
+    function cancelEdit() {
+      if (currentNoteId === null) {
+        if (confirm("Discard new note?")) closeFullWindowAndShowList();
+      } else {
+        const note = notesArray.find(n => n.id === currentNoteId);
+        if (note) {
+          viewTitleSpan.textContent = note.title?.trim() ? note.title : "📄 Untitled";
+          viewContentDiv.textContent = note.content || "(empty)";
+          editorTitle.value = note.title || "";
+          editorBody.value = note.content || "";
+        }
+        isEditMode = false;
+        viewModeContainer.classList.remove('hidden');
+        editModeContainer.classList.add('hidden');
+        updateActionButtonsForView();
+        animateElement(viewModeContainer, 'animate-card-in', 150);
+      }
+    }
+
+    function deleteCurrentNote() {
+      if (currentNoteId !== null) {
+        if (confirm("Delete this note?")) {
+          animateElement(fullWindowDiv, 'animate-card-out', 150);
+          setTimeout(() => deleteNoteById(currentNoteId), 150);
+        }
+      } else {
+        if (confirm("Discard new note?")) closeFullWindowAndShowList();
+      }
+    }
+
+    function duplicateCurrentNote() {
+      if (currentNoteId !== null) {
+        duplicateNoteById(currentNoteId);
+        closeFullWindowAndShowList();
+      }
+    }
+
+    function closeFullWindowAndShowList() {
+      listViewDiv.classList.remove('hidden');
+      fullWindowDiv.classList.add('hidden');
+      currentNoteId = null;
+      isEditMode = false;
+    }
+
+    function updateActionButtonsForView() {
+      actionButtonsDiv.innerHTML = `
+        <button class="edit-window-btn" id="editModeBtn">✏️ Edit</button>
+        <button class="duplicate-window-btn" id="duplicateWindowBtn">📋 Duplicate</button>
+        <button class="delete-window-btn" id="deleteWindowBtn">🗑️ Delete</button>
+      `;
+      document.getElementById('editModeBtn')?.addEventListener('click', switchToEditMode);
+      document.getElementById('duplicateWindowBtn')?.addEventListener('click', duplicateCurrentNote);
+      document.getElementById('deleteWindowBtn')?.addEventListener('click', deleteCurrentNote);
+    }
+
+    function updateActionButtonsForEdit(isNew) {
+      if (isNew) {
+        actionButtonsDiv.innerHTML = `<button class="save-window-btn" id="saveEditBtn">✔ Save</button><button class="cancel-window-btn" id="cancelEditBtn">Cancel</button>`;
+      } else {
+        actionButtonsDiv.innerHTML = `<button class="save-window-btn" id="saveEditBtn">✔ Save</button><button class="cancel-window-btn" id="cancelEditBtn">Cancel</button><button class="delete-window-btn" id="deleteWindowBtn">🗑️ Delete</button>`;
+        document.getElementById('deleteWindowBtn')?.addEventListener('click', deleteCurrentNote);
+      }
+      document.getElementById('saveEditBtn')?.addEventListener('click', saveFromEditMode);
+      document.getElementById('cancelEditBtn')?.addEventListener('click', cancelEdit);
+    }
+
+    function updateWordCharCount() {
+      const text = editorBody.value;
+      const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+      if (wordCountSpan) wordCountSpan.innerText = `${words} words`;
+      if (charCountSpan) charCountSpan.innerText = `${text.length} characters`;
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('velvet_theme');
+      if (saved === 'dark') document.body.classList.add('dark');
+    }
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem('velvet_theme', isDark ? 'dark' : 'light');
+      animateElement(document.body, 'animate-card-in', 200);
+    }
+
+    function openSettingsModal() { settingsModal.classList.add('active'); animateElement(settingsModal.querySelector('.settings-modal'), 'animate-modal-in', 200); }
+    function closeSettingsModal() { settingsModal.classList.remove('active'); }
+
+    // Event binding with animations for button clicks
+    floatingAddBtn.addEventListener('click', () => { animateElement(floatingAddBtn, 'animate-pulse', 150); openNewNoteEditor(); });
+    backToListBtn.addEventListener('click', () => { animateElement(backToListBtn, 'animate-pulse', 150); closeFullWindowAndShowList(); });
+    searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; renderNotesList(); });
+    sortSelect.addEventListener('change', (e) => { currentSort = e.target.value; renderNotesList(); });
+    settingsCog.addEventListener('click', () => { animateElement(settingsCog, 'animate-pulse', 150); openSettingsModal(); });
+    closeSettingsBtn.addEventListener('click', closeSettingsModal);
+    modalThemeBtn.addEventListener('click', () => { animateElement(modalThemeBtn, 'animate-pulse', 150); toggleTheme(); closeSettingsModal(); });
+    modalClearAllBtn.addEventListener('click', () => { animateElement(modalClearAllBtn, 'animate-pulse', 150); clearAllNotes(); });
+    settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) closeSettingsModal(); });
+    editorBody.addEventListener('input', updateWordCharCount);
+    editorTitle.addEventListener('input', updateWordCharCount);
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey||e.metaKey) && e.key==='s' && !editModeContainer.classList.contains('hidden')) {
+        e.preventDefault(); saveFromEditMode();
+      }
+      if (e.key === 'Escape' && settingsModal.classList.contains('active')) closeSettingsModal();
+    });
+
+    loadInitialNotes();
+    renderNotesList();
+    initTheme();
+    fullWindowDiv.classList.add('hidden');
+    listViewDiv.classList.remove('hidden');
+  })();
+</script>
+</body>
+</html>
