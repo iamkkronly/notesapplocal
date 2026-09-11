@@ -4,7 +4,7 @@
    Notes are already stored in localStorage on the device.
    ============================================================ */
 
-const CACHE_NAME = 'sakura-notes-v2';
+const CACHE_NAME = 'sakura-notes-v3';
 
 const APP_SHELL = [
   './',

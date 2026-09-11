@@ -3,10 +3,13 @@
 **Sakura Notes 桜** — a clean, Japanese-themed notes app.
 Live: https://notesapplocal.netlify.app/
 
+**Developer:** Kaustav Kanti Ray · [@iamkkronly](https://github.com/iamkkronly)
+
 ## 🌸 Design
 
 - Washi-paper background, sumi-ink text, vermillion (shu-iro) & sakura accents
 - Japanese serif typography, hanko-style 桜 seal, sakura branch art
+- Clean SVG icons (no emoji clutter), generous whitespace
 - Gently falling sakura petals (respects reduced-motion)
 - Light (washi paper) & dark (indigo night) themes
 
