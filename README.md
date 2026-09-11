@@ -1,7 +1,14 @@
 # notesapplocal
 
-**Velvet Notes** — a beautiful animated notes app.
+**Sakura Notes 桜** — a clean, Japanese-themed notes app.
 Live: https://notesapplocal.netlify.app/
+
+## 🌸 Design
+
+- Washi-paper background, sumi-ink text, vermillion (shu-iro) & sakura accents
+- Japanese serif typography, hanko-style 桜 seal, sakura branch art
+- Gently falling sakura petals (respects reduced-motion)
+- Light (washi paper) & dark (indigo night) themes
 
 ## ✨ Offline / PWA support
 

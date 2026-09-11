@@ -1,13 +1,13 @@
 {
-  "name": "Velvet Notes",
-  "short_name": "Velvet Notes",
-  "description": "Beautiful animated notes app — notes are saved locally on your device and it works fully offline.",
+  "name": "Sakura Notes",
+  "short_name": "Sakura Notes",
+  "description": "A beautiful Japanese-themed notes app — notes are saved locally on your device and it works fully offline.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f8fafc",
-  "theme_color": "#1f4a6e",
+  "background_color": "#f7f2e9",
+  "theme_color": "#f7f2e9",
   "icons": [
     {
       "src": "icons/icon-192.png",
